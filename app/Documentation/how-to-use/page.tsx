@@ -1,365 +1,331 @@
-"use client";
-
-import { motion } from "framer-motion";
+import Link from "next/link";
 import Documentation from "@/components/Documentation";
 import {
-  FaPlay,
-  FaPause,
-  FaStepForward,
-  FaRedo,
-  FaPlus,
-  FaCog,
-  FaChartBar,
-  FaInfo,
-  FaTerminal,
-} from "react-icons/fa";
+  DocHeader,
+  DocSection,
+  Callout,
+  DocCardGrid,
+  DocCard,
+  DocDefList,
+} from "@/components/docs-ui";
+import {
+  Plus,
+  ListChecks,
+  Settings2,
+  Play,
+  BarChart3,
+  MonitorPlay,
+  Info,
+  Lightbulb,
+  Compass,
+  BookOpen,
+  Cog,
+  Wrench,
+} from "lucide-react";
+
+export const metadata = {
+  title: "Using the simulator — MLFQ Simulator",
+  description:
+    "A step-by-step walkthrough of building a workload, tuning the scheduler, running it, and reading the results.",
+};
 
 export default function HowToUsePage() {
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
-  const item = {
-    hidden: { opacity: 0, y: 5 },
-    show: { opacity: 1, y: 0 },
-  };
-
   return (
     <Documentation>
-      <motion.div
-        variants={container}
-        initial="hidden"
-        animate="show"
-        className="prose prose-gray dark:prose-invert max-w-none"
-      >
-        <motion.h1
-          variants={item}
-          className="text-4xl font-bold text-center mb-8 bg-gradient-to-r from-blue-600 via-purple-600 to-green-600 bg-clip-text text-transparent"
-        >
-          Cara Menggunakan Simulasi MLFQ
-        </motion.h1>
+      <DocHeader
+        eyebrow="Documentation"
+        title="Using the simulator"
+        lead="A step-by-step walkthrough of building a workload, tuning the scheduler, running it, and reading what the Multi-Level Feedback Queue decided — using the real controls in the app."
+      />
 
-        <motion.div variants={item} className="mb-8">
-          <div className="border-l-4 border-blue-500 pl-4 mb-4">
-            <h2 className="flex items-center text-2xl font-semibold mb-4 text-blue-600 dark:text-blue-400">
-              <FaPlus className="mr-2" />
-              Membuat Proses
-            </h2>
-          </div>
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg p-6 shadow-sm border border-blue-100 dark:border-blue-700">
-            <p className="mb-3 text-gray-600 dark:text-gray-400">
-              Untuk membuat proses baru dalam simulasi:
-            </p>
-            <ol className="space-y-3 list-decimal list-inside text-gray-600 dark:text-gray-400">
-              <li className="pl-2">
-                Klik tombol{" "}
-                <span className="font-semibold text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/30 px-2 py-1 rounded">
-                  `Buat Proses`
-                </span>{" "}
-                di panel kontrol
-              </li>
-              <li className="pl-2">
-                Atur parameter proses:
-                <ul className="pl-6 mt-2 space-y-2 list-disc">
-                  <li>
-                    ID Proses{" "}
-                    <span className="text-gray-500 dark:text-gray-400">
-                      (diberikan secara otomatis)
-                    </span>
-                  </li>
-                  <li>Waktu Kedatangan</li>
-                  <li>Waktu Burst</li>
-                  <li>
-                    Prioritas{" "}
-                    <span className="text-gray-500 dark:text-gray-400">
-                      (opsional)
-                    </span>
-                  </li>
-                </ul>
-              </li>
-              <li className="pl-2">
-                Klik{" "}
-                <span className="font-semibold text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded">
-                  `Buat`
-                </span>{" "}
-                untuk menambahkan proses ke simulasi
-              </li>
-            </ol>
-          </div>
-        </motion.div>
+      <DocSection title="Add a process" icon={<Plus />}>
+        <p>
+          Open the <Link href="/">Simulator</Link> and find the{" "}
+          <strong>Add process</strong> panel. To create a new process:
+        </p>
+        <ol>
+          <li>
+            Give it a <strong>Process ID</strong> — a name that is unique across
+            all processes. The field is pre-filled with the next{" "}
+            <code>P1</code>, <code>P2</code>, … but you can rename it.
+          </li>
+          <li>
+            Set the numeric parameters: <strong>Arrival</strong>,{" "}
+            <strong>CPU burst</strong>, <strong>I/O time</strong>, and{" "}
+            <strong>Priority</strong>.
+          </li>
+          <li>
+            Click <strong>Add process</strong> to append it to the workload. The
+            button briefly reads <strong>Added</strong> to confirm.
+          </li>
+        </ol>
+        <p>
+          Prefer a starting point? Use the <strong>Template</strong> dropdown to
+          load values from a <em>Basic</em>, <em>CPU-bound</em>,{" "}
+          <em>I/O-bound</em>, or <em>Mixed</em> preset, then adjust from there.
+          As you type, the panel tags the process as{" "}
+          <strong>CPU-bound</strong> (no I/O), <strong>I/O-bound</strong> (I/O
+          time greater than the CPU burst), or <strong>Mixed</strong>.
+        </p>
+      </DocSection>
 
-        {/* Process Parameters Explained section */}
-        <motion.div variants={item} className="mb-8">
-          <div className="border-l-4 border-purple-500 pl-4 mb-4">
-            <h2 className="flex items-center text-2xl font-semibold mb-4 text-purple-600 dark:text-purple-400">
-              <FaInfo className="mr-2" />
-              Penjelasan Parameter Proses
-            </h2>
-          </div>
-          <div className="bg-gradient-to-r from-purple-50 to-green-50 dark:from-purple-900/20 dark:to-green-900/20 rounded-lg p-6 shadow-sm border border-purple-100 dark:border-purple-700">
-            <p className="mb-4 text-gray-600 dark:text-gray-400">
-              Memahami setiap parameter saat mendefinisikan proses:
-            </p>
+      <DocSection title="Process parameters" icon={<ListChecks />}>
+        <p>What each field means when you define a process:</p>
+        <DocDefList
+          items={[
+            {
+              term: "Process ID",
+              def: (
+                <>
+                  A unique identifier for the process, e.g. <code>P1</code>,{" "}
+                  <code>Process_A</code>, or <code>Job3</code>.
+                </>
+              ),
+            },
+            {
+              term: "Arrival",
+              def: (
+                <>
+                  When the process enters the ready queue, in time units.{" "}
+                  <code>0</code> means it is available at the start of the
+                  simulation; <code>5</code> means it arrives after 5 time units.
+                </>
+              ),
+            },
+            {
+              term: "CPU burst",
+              def: (
+                <>
+                  Total CPU time the process needs to finish, in time units.{" "}
+                  <code>8</code> means it requires 8 units of CPU to complete.
+                </>
+              ),
+            },
+            {
+              term: "I/O time",
+              def: (
+                <>
+                  Time the process spends blocked on I/O after its CPU burst.{" "}
+                  <code>3</code> means it performs I/O for 3 time units; yielding
+                  for I/O keeps a job at high priority.
+                </>
+              ),
+            },
+            {
+              term: "Priority",
+              def: (
+                <>
+                  The initial priority, which sets the starting queue.{" "}
+                  <code>0</code> is the highest priority (top queue); larger
+                  values start the process in a lower queue.
+                </>
+              ),
+            },
+          ]}
+        />
+        <Callout title="Tip" icon={<Lightbulb />}>
+          <p>
+            For a realistic simulation, give each process a different mix of
+            arrival, CPU, and I/O values so the workload reflects real system
+            conditions rather than a batch of identical jobs.
+          </p>
+        </Callout>
+      </DocSection>
 
-            <div className="space-y-6">
-              <div className="border-l-4 border-blue-300 pl-4">
-                <h3 className="text-lg font-medium text-blue-700 dark:text-blue-300">
-                  ID Proses
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Pengenal unik untuk proses (contoh: P1, P2, dst.)
-                </p>
-                <div className="bg-blue-50 dark:bg-blue-900/20 rounded mt-2 p-3 text-sm border border-blue-200 dark:border-blue-600">
-                  <span className="text-blue-700 dark:text-blue-300 font-medium">
-                    Contoh:
-                  </span>{" "}
-                  P1, Proses_A, Job3
-                </div>
-              </div>
+      <DocSection title="Configure the scheduler" icon={<Settings2 />}>
+        <p>
+          The <strong>Scheduler configuration</strong> panel controls how MLFQ
+          behaves. Adjust the values, then click{" "}
+          <strong>Apply configuration</strong> to use them for the next run.
+        </p>
+        <DocDefList
+          items={[
+            {
+              term: "Queues",
+              def: (
+                <>
+                  The number of distinct priority levels (1–10). Queue 0 has the
+                  highest priority. Default: <code>4</code>.
+                </>
+              ),
+            },
+            {
+              term: "Time slice",
+              def: (
+                <>
+                  The base quantum given to the highest-priority queue (Q0).
+                  Default: <code>2</code>.
+                </>
+              ),
+            },
+            {
+              term: "Boost interval",
+              def: (
+                <>
+                  After this many time units, every process is moved back to the
+                  highest-priority queue to prevent starvation. Default:{" "}
+                  <code>100</code>.
+                </>
+              ),
+            },
+            {
+              term: "Aging threshold",
+              def: (
+                <>
+                  After a process has waited this many time units in a queue, it
+                  is promoted to a higher-priority queue. Default: <code>5</code>.
+                </>
+              ),
+            },
+          ]}
+        />
+        <p>
+          Each lower queue gets a larger quantum, following{" "}
+          <code>q = slice × (level + 1)</code>. The panel visualizes the quantum
+          for every queue so you can see the tradeoff: higher-priority queues
+          run first but get a shorter slice, so CPU-bound jobs sink and stay out
+          of the way. Use the reset control in the panel to return to the
+          defaults at any time.
+        </p>
+        <Callout title="How these interact" icon={<Info />}>
+          <p>
+            The number of queues, per-queue quantum, boost interval, and aging
+            threshold together decide how quickly jobs are demoted and promoted.
+            See <Link href="/Documentation/how-it-works">How it works</Link> for the
+            full mechanics of demotion, boosting, and aging.
+          </p>
+        </Callout>
+      </DocSection>
 
-              <div className="border-l-4 border-green-300 pl-4">
-                <h3 className="text-lg font-medium text-green-700 dark:text-green-300">
-                  Waktu Kedatangan
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Kapan proses masuk ke antrian siap (unit waktu)
-                </p>
-                <div className="bg-green-50 dark:bg-green-900/20 rounded mt-2 p-3 text-sm border border-green-200 dark:border-green-600">
-                  <span className="text-green-700 dark:text-green-300 font-medium">
-                    Contoh:
-                  </span>{" "}
-                  0 berarti proses tersedia di awal simulasi, 5 berarti tiba setelah 5 unit waktu
-                </div>
-              </div>
+      <DocSection title="Run the simulation" icon={<Play />}>
+        <p>
+          With at least one process added, the controls bar shows the current
+          status — <strong>No processes</strong>, <strong>Ready to run</strong>,{" "}
+          <strong>Simulating…</strong>, or <strong>Completed</strong> — alongside
+          the process count. To run it:
+        </p>
+        <ol>
+          <li>
+            Click <strong>Run simulation</strong> to execute the whole workload.
+            While it computes, the button reads <strong>Running</strong>.
+          </li>
+          <li>
+            After a run, the same button becomes <strong>Run again</strong> so
+            you can re-run after tweaking parameters.
+          </li>
+          <li>
+            Use <strong>Clear</strong> to remove all processes and start over.
+          </li>
+        </ol>
+      </DocSection>
 
-              <div className="border-l-4 border-purple-300 pl-4">
-                <h3 className="text-lg font-medium text-purple-700 dark:text-purple-300">
-                  CPU Burst
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Waktu yang diperlukan untuk eksekusi CPU (unit waktu)
-                </p>
-                <div className="bg-purple-50 dark:bg-purple-900/20 rounded mt-2 p-3 text-sm border border-purple-200 dark:border-purple-600">
-                  <span className="text-purple-700 dark:text-purple-300 font-medium">
-                    Contoh:
-                  </span>{" "}
-                  8 berarti proses membutuhkan 8 unit waktu CPU untuk menyelesaikan eksekusinya
-                </div>
-              </div>
+      <DocSection title="Read the results" icon={<BarChart3 />}>
+        <p>
+          Once a run finishes, the <strong>Results</strong> panel summarizes
+          performance at the top and offers three detail views below.
+        </p>
+        <h3>Metrics</h3>
+        <DocDefList
+          items={[
+            {
+              term: "Avg turnaround",
+              def: "Average of finish minus arrival, per process (time units).",
+            },
+            {
+              term: "Avg waiting",
+              def: "Average time processes were ready but not running (time units).",
+            },
+            {
+              term: "Avg response",
+              def: "Average time from arrival to a process's first CPU slice (time units).",
+            },
+            {
+              term: "CPU utilization",
+              def: "Busy CPU time divided by total time, as a percentage.",
+            },
+            {
+              term: "Throughput",
+              def: "Processes finished per time unit.",
+            },
+          ]}
+        />
+        <h3>Detail views</h3>
+        <ul>
+          <li>
+            <strong>Timeline</strong> — a Gantt chart where each bar is a CPU
+            slice, colored by the queue it ran in. Watch jobs sink to lower
+            queues (cooler colors) as they use more CPU; gaps are time spent
+            waiting or on I/O.
+          </li>
+          <li>
+            <strong>Processes</strong> — a per-process table with the final
+            queue plus start, finish, turnaround, waiting, and response times,
+            and the ending state, so you can read completion order at a glance.
+          </li>
+          <li>
+            <strong>Analysis</strong> — CPU time spent in each queue, plus
+            per-process efficiency (CPU, I/O, waiting, and context switches).
+            Heavy activity in lower queues means CPU-bound jobs were correctly
+            demoted.
+          </li>
+        </ul>
+      </DocSection>
 
-              <div className="border-l-4 border-blue-300 pl-4">
-                <h3 className="text-lg font-medium text-blue-700 dark:text-blue-300">
-                  IO Burst
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Waktu yang dihabiskan untuk operasi I/O (unit waktu)
-                </p>
-                <div className="bg-blue-50 dark:bg-blue-900/20 rounded mt-2 p-3 text-sm border border-blue-200 dark:border-blue-600">
-                  <span className="text-blue-700 dark:text-blue-300 font-medium">
-                    Contoh:
-                  </span>{" "}
-                  3 berarti proses akan melakukan operasi I/O selama 3 unit waktu setelah menggunakan CPU
-                </div>
-              </div>
+      <DocSection title="Replay the execution" icon={<MonitorPlay />}>
+        <p>
+          The <strong>Execution replay</strong> panel steps through the run one
+          event at a time so you can see exactly how processes move between
+          queues. Its transport controls let you:
+        </p>
+        <ul>
+          <li>
+            <strong>Play / Pause</strong> to advance automatically or hold at a
+            moment in time.
+          </li>
+          <li>
+            Step to the <strong>next</strong> or <strong>previous</strong> event,
+            or drag the slider to any point in the timeline.
+          </li>
+          <li>
+            <strong>Reset</strong> to jump back to the start.
+          </li>
+        </ul>
+        <p>
+          At each step the panel shows the job currently holding the{" "}
+          <strong>CPU</strong> (with its queue) or <em>idle</em>, how many
+          processes have finished, and the contents of every ready queue from Q0
+          downward. Everything not running waits in its current priority queue.
+        </p>
+      </DocSection>
 
-              <div className="border-l-4 border-green-300 pl-4">
-                <h3 className="text-lg font-medium text-green-700 dark:text-green-300">
-                  Prioritas
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Prioritas awal proses (berpengaruh pada level antrian awal)
-                </p>
-                <div className="bg-green-50 dark:bg-green-900/20 rounded mt-2 p-3 text-sm border border-green-200 dark:border-green-600">
-                  <span className="text-green-700 dark:text-green-300 font-medium">
-                    Contoh:
-                  </span>{" "}
-                  0 berarti prioritas tertinggi, nilai yang lebih besar berarti prioritas lebih rendah
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 p-3 bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 border border-blue-200 dark:border-blue-600 rounded-md">
-              <p className="flex items-start">
-                <FaTerminal className="text-blue-500 dark:text-blue-400 mr-2 mt-1" />
-                <span className="text-sm text-blue-700 dark:text-blue-300">
-                  <strong>Tips:</strong> Untuk simulasi yang realistis, pertimbangkan menggunakan variasi waktu yang berbeda untuk setiap proses agar mencerminkan kondisi sistem nyata.
-                </span>
-              </p>
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div variants={item} className="mb-8">
-          <div className="border-l-4 border-green-500 pl-4 mb-4">
-            <h2 className="flex items-center text-2xl font-semibold mb-4 text-green-600 dark:text-green-400">
-              <FaCog className="mr-2" />
-              Mengkonfigurasi Parameter MLFQ
-            </h2>
-          </div>
-          <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-lg p-6 shadow-sm border border-green-100 dark:border-green-700">
-            <p className="mb-3 text-gray-600 dark:text-gray-400">
-              Anda dapat menyesuaikan parameter algoritma MLFQ:
-            </p>
-            <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <li className="flex items-center bg-gradient-to-r from-green-100 to-blue-100 dark:from-green-800/30 dark:to-blue-800/30 p-3 rounded-md shadow-sm border border-green-200 dark:border-green-600">
-                <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
-                <span className="text-gray-600 dark:text-gray-400">
-                  Jumlah antrian{" "}
-                  <span className="text-gray-500 dark:text-gray-400">
-                    (default: 4)
-                  </span>
-                </span>
-              </li>
-              <li className="flex items-center bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-800/30 dark:to-purple-800/30 p-3 rounded-md shadow-sm border border-blue-200 dark:border-blue-600">
-                <div className="h-2 w-2 rounded-full bg-blue-500 mr-2"></div>
-                <span className="text-gray-600 dark:text-gray-400">
-                  Kuantum waktu untuk setiap antrian
-                </span>
-              </li>
-              <li className="flex items-center bg-gradient-to-r from-purple-100 to-green-100 dark:from-purple-800/30 dark:to-green-800/30 p-3 rounded-md shadow-sm border border-purple-200 dark:border-purple-600">
-                <div className="h-2 w-2 rounded-full bg-purple-500 mr-2"></div>
-                <span className="text-gray-600 dark:text-gray-400">
-                  Ambang batas aging
-                </span>
-              </li>
-              <li className="flex items-center bg-gradient-to-r from-green-100 to-blue-100 dark:from-green-800/30 dark:to-blue-800/30 p-3 rounded-md shadow-sm border border-green-200 dark:border-green-600">
-                <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
-                <span className="text-gray-600 dark:text-gray-400">
-                  Interval boost prioritas
-                </span>
-              </li>
-            </ul>
-          </div>
-        </motion.div>
-
-        <motion.div variants={item} className="mb-8">
-          <div className="border-l-4 border-purple-500 pl-4 mb-4">
-            <h2 className="flex items-center text-2xl font-semibold mb-4 text-purple-600 dark:text-purple-400">
-              <FaPlay className="mr-2" />
-              Menjalankan Simulasi
-            </h2>
-          </div>
-          <div className="bg-gradient-to-r from-purple-50 to-green-50 dark:from-purple-900/20 dark:to-green-900/20 rounded-lg p-6 shadow-sm border border-purple-100 dark:border-purple-700">
-            <p className="mb-3 text-gray-600 dark:text-gray-400">
-              Untuk memulai simulasi:
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center p-3 bg-gradient-to-r from-green-100 to-blue-100 dark:from-green-800/30 dark:to-blue-800/30 rounded-md shadow-sm border border-green-200 dark:border-green-600">
-                <div className="bg-green-200 dark:bg-green-700 p-2 rounded-full mr-3">
-                  <FaPlay className="text-green-600 dark:text-green-300" />
-                </div>
-                <span className="text-gray-600 dark:text-gray-400">
-                  Klik tombol{" "}
-                  <span className="font-semibold text-green-700 dark:text-green-300">
-                    Mulai
-                  </span>{" "}
-                  untuk memulai
-                </span>
-              </div>
-              <div className="flex items-center p-3 bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-800/30 dark:to-purple-800/30 rounded-md shadow-sm border border-blue-200 dark:border-blue-600">
-                <div className="bg-blue-200 dark:bg-blue-700 p-2 rounded-full mr-3">
-                  <FaStepForward className="text-blue-600 dark:text-blue-300" />
-                </div>
-                <span className="text-gray-600 dark:text-gray-400">
-                  Gunakan{" "}
-                  <span className="font-semibold text-blue-700 dark:text-blue-300">
-                    Step
-                  </span>{" "}
-                  untuk maju satu unit waktu
-                </span>
-              </div>
-              <div className="flex items-center p-3 bg-gradient-to-r from-purple-100 to-green-100 dark:from-purple-800/30 dark:to-green-800/30 rounded-md shadow-sm border border-purple-200 dark:border-purple-600">
-                <div className="bg-purple-200 dark:bg-purple-700 p-2 rounded-full mr-3">
-                  <FaPause className="text-purple-600 dark:text-purple-300" />
-                </div>
-                <span className="text-gray-600 dark:text-gray-400">
-                  Gunakan{" "}
-                  <span className="font-semibold text-purple-700 dark:text-purple-300">
-                    Jeda
-                  </span>{" "}
-                  untuk berhenti sementara
-                </span>
-              </div>
-              <div className="flex items-center p-3 bg-gradient-to-r from-green-100 to-blue-100 dark:from-green-800/30 dark:to-blue-800/30 rounded-md shadow-sm border border-green-200 dark:border-green-600">
-                <div className="bg-green-200 dark:bg-green-700 p-2 rounded-full mr-3">
-                  <FaRedo className="text-green-600 dark:text-green-300" />
-                </div>
-                <span className="text-gray-600 dark:text-gray-400">
-                  Gunakan{" "}
-                  <span className="font-semibold text-green-700 dark:text-green-300">
-                    Reset
-                  </span>{" "}
-                  untuk mulai ulang
-                </span>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div variants={item} className="mb-8">
-          <div className="border-l-4 border-blue-500 pl-4 mb-4">
-            <h2 className="flex items-center text-2xl font-semibold mb-4 text-blue-600 dark:text-blue-400">
-              <FaChartBar className="mr-2" />
-              Melihat Hasil
-            </h2>
-          </div>
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg p-6 shadow-sm border border-blue-100 dark:border-blue-700">
-            <p className="mb-4 text-gray-600 dark:text-gray-400">
-              Simulasi menyediakan berbagai cara untuk melihat hasil:
-            </p>
-            <ul className="space-y-4">
-              <li className="flex items-start">
-                <span className="inline-block bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded mr-2 border border-blue-200 dark:border-blue-600">
-                  ✓
-                </span>
-                <span className="text-gray-600 dark:text-gray-400">
-                  Visualisasi real-time dari eksekusi proses
-                </span>
-              </li>
-              <li className="flex items-start">
-                <span className="inline-block bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded mr-2 border border-green-200 dark:border-green-600">
-                  ✓
-                </span>
-                <span className="text-gray-600 dark:text-gray-400">
-                  Status antrian dan perpindahan proses antar antrian
-                </span>
-              </li>
-              <li className="flex items-start">
-                <span className="inline-block bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-1 rounded mr-2 border border-purple-200 dark:border-purple-600">
-                  ✓
-                </span>
-                <div className="text-gray-600 dark:text-gray-400">
-                  <p>Metrik kinerja:</p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2 pl-4">
-                    <div className="flex items-center bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 p-2 rounded-md shadow-sm border border-blue-100 dark:border-blue-600">
-                      <div className="h-1 w-1 rounded-full bg-blue-500 mr-2"></div>
-                      <span>Rata-rata Turnaround Time</span>
-                    </div>
-                    <div className="flex items-center bg-gradient-to-r from-green-50 to-purple-50 dark:from-green-900/20 dark:to-purple-900/20 p-2 rounded-md shadow-sm border border-green-100 dark:border-green-600">
-                      <div className="h-1 w-1 rounded-full bg-green-500 mr-2"></div>
-                      <span>Rata-rata Waiting Time</span>
-                    </div>
-                    <div className="flex items-center bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 p-2 rounded-md shadow-sm border border-purple-100 dark:border-purple-600">
-                      <div className="h-1 w-1 rounded-full bg-purple-500 mr-2"></div>
-                      <span>Utilisasi CPU</span>
-                    </div>
-                    <div className="flex items-center bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 p-2 rounded-md shadow-sm border border-blue-100 dark:border-blue-600">
-                      <div className="h-1 w-1 rounded-full bg-blue-500 mr-2"></div>
-                      <span>Urutan penyelesaian proses</span>
-                    </div>
-                  </div>
-                </div>
-              </li>
-            </ul>
-          </div>
-        </motion.div>
-      </motion.div>
+      <DocSection title="Where to next" icon={<Compass />}>
+        <DocCardGrid>
+          <DocCard
+            href="/"
+            title="Open the simulator"
+            description="Build a workload and run it now."
+            icon={<Play />}
+          />
+          <DocCard
+            href="/Documentation/how-it-works"
+            title="How it works"
+            description="The mechanics of queues, demotion, boosting, and aging."
+            icon={<Cog />}
+          />
+          <DocCard
+            href="/Documentation"
+            title="Overview"
+            description="What MLFQ is and why it balances response and throughput."
+            icon={<BookOpen />}
+          />
+          <DocCard
+            href="/Documentation/tools"
+            title="Tools & tech"
+            description="The stack behind the simulator, front to back."
+            icon={<Wrench />}
+          />
+        </DocCardGrid>
+      </DocSection>
     </Documentation>
   );
 }

@@ -18,22 +18,22 @@ export const CONFIG_CONSTRAINTS = {
   num_queues: {
     min: 1,
     max: 10,
-    description: "Jumlah level prioritas dalam MLFQ",
+    description: "Number of priority levels in the MLFQ",
   },
   time_slice: {
     min: 1,
     max: 20,
-    description: "Kuantum waktu dasar untuk antrian prioritas tertinggi",
+    description: "Base time quantum for the highest-priority queue",
   },
   boost_interval: {
     min: 1,
     max: 1000,
-    description: "Interval waktu untuk boost prioritas",
+    description: "Interval between priority boosts",
   },
   aging_threshold: {
     min: 1,
     max: 100,
-    description: "Waktu sebelum proses aging terjadi",
+    description: "Wait time before a process ages up",
   },
 };
 
@@ -51,28 +51,28 @@ export const QUEUE_COLORS = [
   "#00BCD4", // Queue 9 - Cyan (lowest priority)
 ];
 
-// Informative tooltips for configuration parameters (Indonesian)
+// Informative tooltips for configuration parameters
 export const CONFIG_TOOLTIPS = {
   num_queues:
-    "Jumlah level prioritas yang berbeda dalam penjadwal MLFQ. Antrian 0 memiliki prioritas tertinggi.",
+    "The number of distinct priority levels in the MLFQ scheduler. Queue 0 has the highest priority.",
   time_slice:
-    "Kuantum waktu yang diberikan kepada proses di antrian prioritas tertinggi (Antrian 0). Setiap antrian yang lebih rendah mendapat (level+1) × time_slice.",
+    "The time quantum given to processes in the highest-priority queue (Queue 0). Each lower queue gets (level + 1) × time_slice.",
   boost_interval:
-    "Setelah sekian unit waktu ini, semua proses dipindahkan kembali ke antrian prioritas tertinggi untuk mencegah starvation.",
+    "After this many time units, every process is moved back to the highest-priority queue to prevent starvation.",
   aging_threshold:
-    "Setelah menunggu sekian unit waktu ini di dalam antrian, proses akan dipromosikan ke antrian prioritas yang lebih tinggi.",
+    "After waiting this many time units in a queue, a process is promoted to a higher-priority queue.",
 };
 
-// Common explanatory texts (Indonesian)
+// Common explanatory texts
 export const MLFQ_CONCEPTS = {
   queueLevels:
-    "Dalam MLFQ, proses berpindah antar antrian prioritas yang berbeda berdasarkan perilakunya. Proses I/O bound biasanya tetap di antrian prioritas tinggi.",
+    "In MLFQ, processes move between priority queues based on their behavior. I/O-bound processes usually stay in the high-priority queues.",
   timeQuantum:
-    "Setiap antrian memiliki kuantum waktu yang berbeda. Antrian yang lebih rendah (prioritas lebih rendah) mendapat slice waktu yang lebih besar untuk mengurangi overhead context switching pada proses CPU-bound.",
+    "Each queue has a different time quantum. Lower (lower-priority) queues get a larger slice to reduce context-switching overhead for CPU-bound processes.",
   priorityBoost:
-    "Priority boost secara berkala memindahkan semua proses ke antrian prioritas tertinggi untuk mencegah starvation.",
+    "A priority boost periodically moves every process to the highest-priority queue to prevent starvation.",
   aging:
-    "Aging mempromosikan proses yang telah menunggu terlalu lama di antrian prioritas rendah, memberikan keadilan.",
+    "Aging promotes processes that have waited too long in a low-priority queue, keeping scheduling fair.",
 };
 
 // Sample process templates for quick setup

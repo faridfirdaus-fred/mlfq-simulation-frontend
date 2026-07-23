@@ -1,269 +1,242 @@
-import React from "react";
-import { Process } from "../app/api/utils/types";
+"use client";
+
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import { Process, SimulationConfig } from "../app/api/utils/types";
+import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
+import { Panel } from "@/components/mlfq-ui";
+import { eventTimes, snapshotAt } from "@/lib/timeline";
+import { queueColor, queueTint } from "@/lib/queue";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
+  Play,
+  Pause,
+  SkipForward,
+  SkipBack,
+  RotateCcw,
   Cpu,
-  HardDrive,
-  Timer,
-  Clock,
-  Layers,
-  ArrowDownUp,
+  MonitorPlay,
 } from "lucide-react";
-import { motion } from "framer-motion";
 
 interface ProcessMonitorProps {
-  processes: Process[];
-  currentTime: number;
-  totalTime: number;
-  isRunning: boolean;
+  processes: Process[] | null;
+  totalSimulationTime: number | null;
+  activeConfig?: SimulationConfig | null;
 }
+
+const STEP_MS = 700;
 
 const ProcessMonitor: React.FC<ProcessMonitorProps> = ({
   processes,
-  currentTime,
-  totalTime,
-  isRunning,
+  totalSimulationTime,
+  activeConfig,
 }) => {
-  if (!processes.length) return null;
+  const numQueues = activeConfig?.num_queues ?? 4;
+  const total = totalSimulationTime ?? 0;
 
-  // Group processes by their current state and queue
-  const runningProcess = processes.find((p) => p.state === "running");
-  const ioProcesses = processes.filter((p) => p.state === "blocked");
+  const events = useMemo(
+    () => (processes ? eventTimes(processes, total) : [0]),
+    [processes, total]
+  );
 
-  // Group by queue levels
-  const queueProcesses = [
-    processes.filter((p) => p.state === "ready" && p.queue === 0),
-    processes.filter((p) => p.state === "ready" && p.queue === 1),
-    processes.filter((p) => p.state === "ready" && p.queue === 2),
-    processes.filter((p) => p.state === "ready" && p.queue === 3),
-  ];
+  const [index, setIndex] = useState(0);
+  const [playing, setPlaying] = useState(false);
+  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Calculate progress
-  const progress = (currentTime / totalTime) * 100;
+  const clampedIndex = Math.min(index, events.length - 1);
+  const t = events[clampedIndex] ?? 0;
+  const atEnd = clampedIndex >= events.length - 1;
+
+  useEffect(() => {
+    setIndex(0);
+    setPlaying(false);
+  }, [processes]);
+
+  useEffect(() => {
+    if (!playing) return;
+    timer.current = setInterval(() => {
+      setIndex((i) => (i >= events.length - 1 ? i : i + 1));
+    }, STEP_MS);
+    return () => {
+      if (timer.current) clearInterval(timer.current);
+    };
+  }, [playing, events.length]);
+
+  useEffect(() => {
+    if (atEnd) setPlaying(false);
+  }, [atEnd]);
+
+  const snapshot = useMemo(
+    () => (processes ? snapshotAt(processes, t) : []),
+    [processes, t]
+  );
+
+  if (!processes || processes.length === 0 || !totalSimulationTime) {
+    return null;
+  }
+
+  const running = snapshot.find((s) => s.state === "running");
+  const finished = snapshot.filter((s) => s.state === "finished");
+  const readyByQueue: Record<number, string[]> = {};
+  for (let q = 0; q < numQueues; q++) readyByQueue[q] = [];
+  snapshot
+    .filter((s) => s.state === "ready")
+    .forEach((s) => {
+      const q = Math.min(numQueues - 1, Math.max(0, s.queue));
+      readyByQueue[q].push(s.pid);
+    });
+
+  const togglePlay = () => {
+    if (atEnd) setIndex(0);
+    setPlaying((p) => !p);
+  };
 
   return (
-    <Card className="border-gray-100 dark:border-gray-700">
-      <CardHeader className="border-b border-gray-100 dark:border-gray-700">
-        <motion.div
-          className="flex justify-between items-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          <div>
-            <CardTitle className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-              <Layers className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-              MLFQ Process Monitor
-            </CardTitle>
-            <CardDescription className="text-gray-500 dark:text-gray-400">
-              Real-time visualization of the scheduling simulation
-            </CardDescription>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-              <span className="font-mono text-gray-600 dark:text-gray-400">
-                Time: {currentTime}
-              </span>
-            </div>
-            <Badge
-              variant="outline"
-              className="border-gray-200 text-gray-600 dark:border-gray-600 dark:text-gray-300"
-            >
-              {isRunning ? "Running" : "Paused"}
-            </Badge>
-          </div>
-        </motion.div>
-      </CardHeader>
-
-      <CardContent className="space-y-6 pt-4">
-        {/* Progress Bar */}
-        <motion.div
-          className="w-full bg-gray-100 dark:bg-gray-700 h-2 rounded-full overflow-hidden"
-          initial={{ opacity: 0, y: 5 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <div
-            className="bg-gray-400 dark:bg-gray-500 h-full"
-            style={{ width: `${progress}%` }}
-          ></div>
-        </motion.div>
-
-        <motion.div
-          className="flex flex-wrap gap-3 text-sm"
-          initial={{ opacity: 0, y: 5 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-        >
-          <Badge
-            variant="outline"
-            className="flex items-center gap-1 border-gray-200 text-gray-600 dark:border-gray-600 dark:text-gray-300"
+    <Panel
+      title="Execution replay"
+      icon={<MonitorPlay />}
+      meta={
+        <span>
+          t=<span className="text-foreground">{t}</span> / {total}
+        </span>
+      }
+      bodyClassName="space-y-4"
+    >
+      {/* Transport controls */}
+      <div className="flex flex-col gap-3 rounded-lg border bg-panel/60 p-3 sm:flex-row sm:items-center">
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              setPlaying(false);
+              setIndex(0);
+            }}
+            disabled={clampedIndex === 0}
+            aria-label="Reset"
           >
-            <Timer className="h-3 w-3" />
-            Elapsed: {currentTime} units
-          </Badge>
-        </motion.div>
+            <RotateCcw className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              setPlaying(false);
+              setIndex((i) => Math.max(0, i - 1));
+            }}
+            disabled={clampedIndex === 0}
+            aria-label="Previous event"
+          >
+            <SkipBack className="size-4" />
+          </Button>
+          <Button size="icon" onClick={togglePlay} aria-label={playing ? "Pause" : "Play"}>
+            {playing ? <Pause className="size-4" /> : <Play className="size-4" />}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              setPlaying(false);
+              setIndex((i) => Math.min(events.length - 1, i + 1));
+            }}
+            disabled={atEnd}
+            aria-label="Next event"
+          >
+            <SkipForward className="size-4" />
+          </Button>
+        </div>
+        <div className="flex-1 px-1">
+          <Slider
+            min={0}
+            max={Math.max(events.length - 1, 0)}
+            step={1}
+            value={[clampedIndex]}
+            onValueChange={(v) => {
+              setPlaying(false);
+              setIndex(v[0]);
+            }}
+          />
+        </div>
+        <span className="shrink-0 text-center font-mono text-xs text-muted-foreground">
+          event {clampedIndex + 1}/{events.length}
+        </span>
+      </div>
 
-        {/* Main Monitor Grid */}
-        <motion.div
-          className="grid md:grid-cols-5 gap-4"
-          initial={{ opacity: 0, y: 5 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          {/* CPU Section */}
-          <Card className="col-span-2 border-gray-100 dark:border-gray-700">
-            <CardHeader className="bg-gray-50 dark:bg-gray-800 py-2 border-b border-gray-100 dark:border-gray-700">
-              <CardTitle className="text-base flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                <Cpu className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                CPU
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4">
-              {runningProcess ? (
-                <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 p-3 rounded-md border border-gray-200 dark:border-gray-700">
-                  <div>
-                    <div className="font-medium text-gray-700 dark:text-gray-300">
-                      {runningProcess.pid}
-                    </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                      Queue: {runningProcess.queue} | Burst:{" "}
-                      {runningProcess.burst_time}
-                    </div>
-                  </div>
-                  <Badge className="bg-gray-200 hover:bg-gray-300 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
-                    Running
-                  </Badge>
-                </div>
-              ) : (
-                <div className="text-center py-6 text-gray-500 dark:text-gray-400 italic">
-                  No process currently running
-                </div>
-              )}
-            </CardContent>
-          </Card>
+      {/* CPU */}
+      <div className="flex items-center gap-3 rounded-lg border p-3">
+        <span className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+          <Cpu className="size-4 text-signal" />
+          CPU
+        </span>
+        {running ? (
+          <span
+            className="inline-flex items-center gap-2 rounded-md border px-2.5 py-1 font-mono text-sm font-semibold"
+            style={{
+              color: queueColor(running.queue),
+              borderColor: `color-mix(in oklch, ${queueColor(running.queue)} 45%, transparent)`,
+              background: queueTint(running.queue, 0.14),
+            }}
+          >
+            <span
+              className="size-1.5 animate-pulse rounded-full"
+              style={{ background: queueColor(running.queue) }}
+            />
+            {running.pid}
+            <span className="font-normal text-muted-foreground">· Q{running.queue}</span>
+          </span>
+        ) : (
+          <span className="font-mono text-sm text-muted-foreground">idle</span>
+        )}
+        <span className="ml-auto font-mono text-xs text-muted-foreground">
+          {finished.length}/{processes.length} finished
+        </span>
+      </div>
 
-          {/* I/O Section */}
-          <Card className="col-span-3 border-gray-100 dark:border-gray-700">
-            <CardHeader className="bg-gray-50 dark:bg-gray-800 py-2 border-b border-gray-100 dark:border-gray-700">
-              <CardTitle className="text-base flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                <HardDrive className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                I/O Waiting ({ioProcesses.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4">
-              {ioProcesses.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                  {ioProcesses.map((proc) => (
-                    <div
-                      key={`io-${proc.pid}`}
-                      className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded-md border border-gray-200 dark:border-gray-700"
-                    >
-                      <div>
-                        <div className="font-medium text-gray-700 dark:text-gray-300">
-                          {proc.pid}
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          I/O time left: {proc.remaining_io_time || "?"}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-6 text-gray-500 dark:text-gray-400 italic">
-                  No processes in I/O
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* MLFQ Queues */}
-        <motion.div
-          className="space-y-3"
-          initial={{ opacity: 0, y: 5 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25 }}
-        >
-          <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-700 dark:text-gray-300">
-            <ArrowDownUp className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-            MLFQ Queues
-          </h3>
-
-          {queueProcesses.map((queueProcs, index) => (
-            <Card
-              key={`queue-${index}`}
-              className={`border-gray-100 dark:border-gray-700 ${
-                index === 0 ? "bg-gray-50 dark:bg-gray-800" : ""
-              }`}
+      {/* Ready queues */}
+      <div className="space-y-1.5">
+        {Array.from({ length: numQueues }, (_, q) => (
+          <div
+            key={q}
+            className="flex items-center gap-3 rounded-lg border px-3 py-2"
+            style={{
+              borderColor: `color-mix(in oklch, ${queueColor(q)} 22%, var(--border))`,
+              background: queueTint(q, 0.05),
+            }}
+          >
+            <span
+              className="flex w-14 shrink-0 items-center gap-1.5 font-mono text-xs font-medium"
+              style={{ color: queueColor(q) }}
             >
-              <CardHeader className="py-2 border-b border-gray-100 dark:border-gray-700">
-                <CardTitle className="text-sm flex items-center justify-between text-gray-700 dark:text-gray-300">
-                  <span>
-                    Queue {index} {index === 0 ? "(Highest Priority)" : ""}
-                  </span>
-                  <Badge
-                    variant="outline"
-                    className="border-gray-200 text-gray-600 dark:border-gray-600 dark:text-gray-300"
+              <span className="size-2 rounded-[2px]" style={{ background: queueColor(q) }} />
+              Q{q}
+            </span>
+            <div className="flex min-h-6 flex-1 flex-wrap items-center gap-1.5">
+              {readyByQueue[q].length > 0 ? (
+                readyByQueue[q].map((pid) => (
+                  <span
+                    key={pid}
+                    className="rounded-md border px-1.5 py-0.5 font-mono text-xs font-medium"
+                    style={{
+                      color: queueColor(q),
+                      borderColor: `color-mix(in oklch, ${queueColor(q)} 40%, transparent)`,
+                      background: queueTint(q, 0.12),
+                    }}
                   >
-                    {queueProcs.length} processes
-                  </Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-3">
-                {queueProcs.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {queueProcs.map((proc) => (
-                      <Badge
-                        key={`queue-${index}-${proc.pid}`}
-                        variant="outline"
-                        className="py-1 px-3 bg-gray-100 border-gray-200 text-gray-600 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
-                      >
-                        {proc.pid}
-                      </Badge>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-2 text-gray-500 dark:text-gray-400 text-sm italic">
-                    Queue empty
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </motion.div>
-
-        {/* Legend */}
-        <motion.div
-          className="text-xs text-gray-500 dark:text-gray-400 pt-2 flex flex-wrap gap-x-4 gap-y-2 border-t border-gray-100 dark:border-gray-700"
-          initial={{ opacity: 0, y: 5 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-gray-200 dark:bg-gray-600 rounded-sm"></div>
-            <span>Highest Priority Queue</span>
+                    {pid}
+                  </span>
+                ))
+              ) : (
+                <span className="font-mono text-xs text-muted-foreground/60">empty</span>
+              )}
+            </div>
           </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-gray-300 dark:bg-gray-500 rounded-sm"></div>
-            <span>Running Process</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-gray-100 dark:bg-gray-700 rounded-sm border border-gray-200 dark:border-gray-600"></div>
-            <span>I/O Process</span>
-          </div>
-        </motion.div>
-      </CardContent>
-    </Card>
+        ))}
+      </div>
+      <p className="text-xs text-muted-foreground">
+        Step through time to watch processes enter, run on the CPU, and move
+        between queues. The running job holds the CPU; everything else waits in
+        its current priority queue.
+      </p>
+    </Panel>
   );
 };
 

@@ -1,76 +1,95 @@
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, Trash, Loader2 } from "lucide-react";
-import { motion } from "framer-motion";
+import { Play, Trash2, Loader2, RotateCcw } from "lucide-react";
 
 interface SimulationControlsProps {
   onStart: () => void;
   onClear: () => void;
   isRunning: boolean;
+  processCount: number;
+  isSimulated?: boolean;
   disableStart?: boolean;
   disableClear?: boolean;
 }
+
+type Status = "empty" | "ready" | "running" | "done";
+
+const STATUS: Record<Status, { label: string; color: string }> = {
+  empty: { label: "No processes", color: "var(--muted-foreground)" },
+  ready: { label: "Ready to run", color: "var(--state-ready)" },
+  running: { label: "Simulating…", color: "var(--state-running)" },
+  done: { label: "Completed", color: "var(--state-finished)" },
+};
 
 const SimulationControls: React.FC<SimulationControlsProps> = ({
   onStart,
   onClear,
   isRunning,
+  processCount,
+  isSimulated = false,
   disableStart = false,
   disableClear = false,
 }) => {
-  return (
-    <Card className="border-gray-100 dark:border-gray-700 shadow-lg">
-      <CardContent className="flex justify-between items-center p-6 bg-gradient-to-r from-blue-50 via-purple-50 to-green-50 dark:from-blue-900/20 dark:via-purple-900/20 dark:to-green-900/20">
-        <motion.div
-          whileHover={{ scale: disableStart ? 1 : 1.05 }}
-          whileTap={{ scale: disableStart ? 1 : 0.95 }}
-        >
-          <Button
-            onClick={onStart}
-            disabled={isRunning || disableStart}
-            className={`gap-2 px-6 py-3 font-medium transition-all duration-300 ${
-              isRunning || disableStart
-                ? "bg-gray-400 dark:bg-gray-600"
-                : "bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 hover:from-green-600 hover:via-blue-600 hover:to-purple-600 shadow-lg hover:shadow-xl"
-            } text-white`}
-            size="lg"
-          >
-            {isRunning ? (
-              <>
-                <Loader2 className="h-5 w-5 animate-spin" />
-                Menjalankan Simulasi...
-              </>
-            ) : (
-              <>
-                <Play size={20} />
-                Mulai Simulasi
-              </>
-            )}
-          </Button>
-        </motion.div>
+  const status: Status = isRunning
+    ? "running"
+    : processCount === 0
+    ? "empty"
+    : isSimulated
+    ? "done"
+    : "ready";
+  const s = STATUS[status];
 
-        <motion.div
-          whileHover={{ scale: disableClear ? 1 : 1.05 }}
-          whileTap={{ scale: disableClear ? 1 : 0.95 }}
+  return (
+    <div className="flex flex-col gap-3 rounded-xl border bg-card p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-center gap-2.5 px-1">
+        <span
+          className="size-2 rounded-full"
+          style={{
+            background: s.color,
+            boxShadow: `0 0 0 3px color-mix(in oklch, ${s.color} 18%, transparent)`,
+          }}
+          aria-hidden
+        />
+        <span className="text-sm font-medium text-foreground">{s.label}</span>
+        <span className="font-mono text-xs text-muted-foreground">
+          {processCount} {processCount === 1 ? "process" : "processes"}
+        </span>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          onClick={onClear}
+          disabled={isRunning || disableClear}
+          className="gap-1.5 text-muted-foreground hover:text-destructive"
         >
-          <Button
-            onClick={onClear}
-            disabled={isRunning || disableClear}
-            variant="outline"
-            className={`gap-2 px-6 py-3 font-medium transition-all duration-300 ${
-              isRunning || disableClear
-                ? "border-gray-300 text-gray-400 dark:border-gray-600 dark:text-gray-500"
-                : "border-purple-300 text-purple-700 hover:bg-gradient-to-r hover:from-purple-100 hover:to-blue-100 dark:border-purple-600 dark:text-purple-400 dark:hover:from-purple-900/30 dark:hover:to-blue-900/30 shadow-md hover:shadow-lg"
-            }`}
-            size="lg"
-          >
-            <Trash size={20} />
-            Bersihkan Semua
-          </Button>
-        </motion.div>
-      </CardContent>
-    </Card>
+          <Trash2 className="size-4" />
+          Clear
+        </Button>
+        <Button
+          onClick={onStart}
+          disabled={isRunning || disableStart}
+          className="gap-2 px-5"
+        >
+          {isRunning ? (
+            <>
+              <Loader2 className="size-4 animate-spin" />
+              Running
+            </>
+          ) : isSimulated ? (
+            <>
+              <RotateCcw className="size-4" />
+              Run again
+            </>
+          ) : (
+            <>
+              <Play className="size-4" />
+              Run simulation
+            </>
+          )}
+        </Button>
+      </div>
+    </div>
   );
 };
 

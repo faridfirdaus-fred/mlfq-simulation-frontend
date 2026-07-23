@@ -5,13 +5,30 @@ export interface Process {
   arrival_time?: number;
   burst_time?: number;
   io_time?: number;
-  priority?: number; // Added this missing field
+  priority?: number;
   waiting_time?: number;
+  traditional_waiting_time?: number;
   turnaround_time?: number;
+  response_time?: number;
+  remaining_time?: number;
   remaining_io_time?: number;
   start_time?: number;
   finish_time?: number;
   first_execution_time?: number | null;
+  context_switches?: number;
+  cpu_usage_time?: number;
+  cpu_efficiency?: number;
+  io_efficiency?: number;
+  waiting_ratio?: number;
+  cpu_bursts_completed?: number;
+  io_bursts_completed?: number;
+
+  /** Real CPU execution slices from the backend: [start, end] pairs. */
+  execution_history?: [number, number][];
+  /** Queue transitions over time from the backend: [time, queue] pairs. */
+  queue_history?: [number, number][];
+
+  /** Legacy object form (unused by current backend, kept for compatibility). */
   execution_log?: {
     start_time: number;
     end_time: number;
@@ -35,7 +52,13 @@ export interface SimulationMetrics {
   avg_turnaround_time: number;
   avg_waiting_time: number;
   avg_response_time: number;
+  avg_io_time?: number;
   cpu_utilization: number;
+  throughput?: number;
+  queue_distribution?: Record<string, number>;
+  total_cpu_time?: number;
+  total_io_time?: number;
+  total_waiting_time?: number;
   total_time: number;
 }
 
@@ -47,6 +70,7 @@ export interface SimulationResult {
 export interface BackendResponse {
   results: SimulationResult;
   total_time?: number;
+  metrics_description?: Record<string, string>;
 }
 
 export interface FrontendResult {

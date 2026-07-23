@@ -1,305 +1,261 @@
-"use client";
-
-import { motion } from "framer-motion";
+import Link from "next/link";
 import Documentation from "@/components/Documentation";
 import {
-  FaLayerGroup,
-  FaClock,
-  FaExchangeAlt,
-  FaUserClock,
-  FaCode,
-  FaChartLine,
-  FaCog,
-} from "react-icons/fa";
+  DocHeader,
+  DocSection,
+  Callout,
+  DocDefList,
+  DocCardGrid,
+  DocCard,
+} from "@/components/docs-ui";
+import {
+  Layers,
+  Timer,
+  ArrowUpDown,
+  ArrowUpToLine,
+  Hourglass,
+  SlidersHorizontal,
+  Gauge,
+  Cpu,
+  Info,
+  MousePointerClick,
+  Play,
+} from "lucide-react";
+
+export const metadata = {
+  title: "How it works — MLFQ Simulator",
+  description:
+    "The mechanics of the Multi-Level Feedback Queue: priority queues, per-queue time quanta, demotion, priority boost, and aging.",
+};
 
 export default function HowItWorksPage() {
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
-  const item = {
-    hidden: { opacity: 0, y: 5 },
-    show: { opacity: 1, y: 0 },
-  };
-
   return (
     <Documentation>
-      <motion.div
-        variants={container}
-        initial="hidden"
-        animate="show"
-        className="prose prose-gray dark:prose-invert max-w-none"
-      >
-        <motion.h1
-          variants={item}
-          className="text-4xl font-bold text-center mb-8 bg-gradient-to-r from-blue-600 via-purple-600 to-green-600 bg-clip-text text-transparent"
-        >
-          Cara Kerja Simulasi MLFQ
-        </motion.h1>
+      <DocHeader
+        eyebrow="Documentation"
+        title="How it works"
+        lead="A look under the hood of the Multi-Level Feedback Queue: how processes are organized into priority queues, how each queue gets its own time quantum, and how the scheduler moves work up and down based on behavior alone."
+      />
 
-        <motion.div variants={item} className="mb-8">
-          <div className="border-l-4 border-blue-500 pl-4 mb-4">
-            <h2 className="flex items-center text-2xl font-semibold mb-4 text-blue-600 dark:text-blue-400">
-              <FaLayerGroup className="mr-2" />
-              Gambaran Umum Algoritma MLFQ
-            </h2>
-          </div>
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg p-6 shadow-sm border border-blue-100 dark:border-blue-700">
-            <p className="mb-3 text-gray-600 dark:text-gray-400">
-              Algoritma Multi-Level Feedback Queue (MLFQ) adalah algoritma penjadwalan CPU yang berusaha mengoptimalkan untuk proses interaktif dan batch. Algoritma ini menggunakan beberapa antrian dengan level prioritas yang berbeda dan mengimplementasikan feedback untuk menyesuaikan prioritas proses berdasarkan perilakunya.
-            </p>
-            <div className="mt-4 p-3 bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-800/30 dark:to-purple-800/30 rounded-lg border border-blue-200 dark:border-blue-600">
-              <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                Keunggulan utama: MLFQ mencapai manfaat dari SJF (shortest job first) dan priority scheduling tanpa memerlukan pengetahuan sebelumnya tentang waktu eksekusi proses.
-              </p>
-            </div>
-          </div>
-        </motion.div>
+      <DocSection title="Algorithm overview" icon={<Layers />}>
+        <p>
+          The <strong>Multi-Level Feedback Queue</strong> (MLFQ) is a CPU
+          scheduling algorithm that tries to serve both interactive and batch
+          workloads well at the same time. It maintains several queues at
+          different priority levels and uses <em>feedback</em> — observed
+          behavior — to adjust each process&apos;s priority as it runs.
+        </p>
+        <Callout title="Why it works without a crystal ball" icon={<Info />}>
+          <p>
+            MLFQ captures the benefits of <strong>shortest-job-first</strong>{" "}
+            and <strong>priority scheduling</strong> without needing any advance
+            knowledge of how long a process will run. It infers that knowledge
+            from how each process actually uses the CPU.
+          </p>
+        </Callout>
+      </DocSection>
 
-        <motion.div variants={item} className="mb-8">
-          <div className="border-l-4 border-purple-500 pl-4 mb-4">
-            <h2 className="flex items-center text-2xl font-semibold mb-4 text-purple-600 dark:text-purple-400">
-              <FaLayerGroup className="mr-2" />
-              Komponen Utama
-            </h2>
-          </div>
+      <DocSection title="Multiple priority queues" icon={<Layers />}>
+        <p>
+          The scheduler keeps a set of queues, each at a distinct priority level.
+          Lower queue numbers mean higher priority: <code>Q0</code> is served
+          first, and the last queue is served last. A rough division of labor
+          across the levels looks like this:
+        </p>
+        <ul>
+          <li>
+            <strong>Highest priority (Q0)</strong> — short, interactive
+            processes that need fast response.
+          </li>
+          <li>
+            <strong>Middle priority (Q1, Q2)</strong> — mixed workloads that
+            alternate between computing and I/O.
+          </li>
+          <li>
+            <strong>Lowest priority (bottom queue)</strong> — long, CPU-bound
+            batch processes that value throughput over latency.
+          </li>
+        </ul>
+        <p>
+          A process is never pinned to a level. Where it ends up is decided
+          entirely by its behavior over time, not by any label set in advance.
+        </p>
+      </DocSection>
 
-          <div className="space-y-6">
-            <div className="bg-gradient-to-r from-purple-50 to-green-50 dark:from-purple-900/20 dark:to-green-900/20 rounded-lg p-6 shadow-sm border border-purple-100 dark:border-purple-700">
-              <h3 className="flex items-center text-xl font-semibold mb-3 text-purple-700 dark:text-purple-300">
-                <FaLayerGroup className="mr-2" />
-                1. Antrian Multi-Prioritas
-              </h3>
-              <p className="mb-3 text-gray-600 dark:text-gray-400">
-                Algoritma memelihara beberapa antrian, masing-masing dengan level prioritas yang berbeda:
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div className="flex items-center bg-gradient-to-r from-green-100 to-blue-100 dark:from-green-800/30 dark:to-blue-800/30 p-3 rounded-md shadow-sm border border-green-200 dark:border-green-600">
-                  <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
-                  <span className="text-gray-600 dark:text-gray-400 text-sm">
-                    Antrian prioritas tertinggi (Q0) - Untuk proses interaktif
-                  </span>
-                </div>
-                <div className="flex items-center bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-800/30 dark:to-purple-800/30 p-3 rounded-md shadow-sm border border-blue-200 dark:border-blue-600">
-                  <div className="h-2 w-2 rounded-full bg-blue-500 mr-2"></div>
-                  <span className="text-gray-600 dark:text-gray-400 text-sm">
-                    Antrian prioritas menengah (Q1, Q2) - Untuk beban kerja campuran
-                  </span>
-                </div>
-                <div className="flex items-center bg-gradient-to-r from-purple-100 to-green-100 dark:from-purple-800/30 dark:to-green-800/30 p-3 rounded-md shadow-sm border border-purple-200 dark:border-purple-600">
-                  <div className="h-2 w-2 rounded-full bg-purple-500 mr-2"></div>
-                  <span className="text-gray-600 dark:text-gray-400 text-sm">
-                    Antrian prioritas terendah (Q3) - Untuk proses batch
-                  </span>
-                </div>
-              </div>
-            </div>
+      <DocSection title="Time quantum per queue" icon={<Timer />}>
+        <p>
+          Every queue has its own time quantum. Higher-priority queues use a{" "}
+          <strong>shorter</strong> quantum so interactive jobs get the CPU back
+          quickly; lower-priority queues use a <strong>longer</strong> quantum
+          so long CPU-bound jobs run in bigger chunks and pay less
+          context-switch overhead. The quantum grows with the queue level:
+        </p>
+        <p>
+          <code>quantum = time_slice × (level + 1)</code>
+        </p>
+        <p>
+          With a base <code>time_slice</code> of <code>2</code>, that gives{" "}
+          <code>Q0 = 2</code>, <code>Q1 = 4</code>, <code>Q2 = 6</code>,{" "}
+          <code>Q3 = 8</code>, and so on down the ramp — a fast top for
+          responsiveness and a patient bottom for efficiency.
+        </p>
+      </DocSection>
 
-            <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-lg p-6 shadow-sm border border-green-100 dark:border-green-700">
-              <h3 className="flex items-center text-xl font-semibold mb-3 text-green-700 dark:text-green-300">
-                <FaClock className="mr-2" />
-                2. Kuantum Waktu
-              </h3>
-              <p className="mb-3 text-gray-600 dark:text-gray-400">
-                Setiap antrian memiliki kuantum waktu sendiri:
-              </p>
-              <ul className="space-y-2">
-                <li className="flex items-start">
-                  <span className="inline-block bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded mr-2 border border-green-200 dark:border-green-700 text-sm">
-                    ✓
-                  </span>
-                  <span className="text-gray-600 dark:text-gray-400">
-                    Antrian prioritas tinggi memiliki kuantum waktu yang lebih pendek
-                  </span>
-                </li>
-                <li className="flex items-start">
-                  <span className="inline-block bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded mr-2 border border-blue-200 dark:border-blue-700 text-sm">
-                    ✓
-                  </span>
-                  <span className="text-gray-600 dark:text-gray-400">
-                    Antrian prioritas rendah memiliki kuantum waktu yang lebih panjang
-                  </span>
-                </li>
-                <li className="flex items-start">
-                  <span className="inline-block bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-1 rounded mr-2 border border-purple-200 dark:border-purple-700 text-sm">
-                    ✓
-                  </span>
-                  <span className="text-gray-600 dark:text-gray-400">
-                    Ini membantu proses interaktif mendapatkan waktu respons yang cepat
-                  </span>
-                </li>
-              </ul>
-            </div>
+      <DocSection title="How processes move between queues" icon={<ArrowUpDown />}>
+        <p>
+          Feedback is the heart of MLFQ. A process changes priority based on
+          whether it consumes its whole quantum or gives up the CPU early:
+        </p>
+        <ol>
+          <li>A new process enters at the highest-priority queue.</li>
+          <li>
+            If it uses its <strong>entire</strong> time quantum, it is assumed to
+            be CPU-bound and is <strong>demoted</strong> one level to a
+            lower-priority queue.
+          </li>
+          <li>
+            If it releases the CPU <strong>before</strong> the quantum expires —
+            typically to wait on I/O — it <strong>stays</strong> in the same
+            queue.
+          </li>
+        </ol>
+        <p>
+          Over time this sorts work automatically: CPU-bound processes sink
+          toward the bottom, while I/O-bound and interactive processes linger
+          near the top where they are scheduled promptly.
+        </p>
+      </DocSection>
 
-            <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg p-6 shadow-sm border border-blue-100 dark:border-blue-700">
-              <h3 className="flex items-center text-xl font-semibold mb-3 text-blue-700 dark:text-blue-300">
-                <FaExchangeAlt className="mr-2" />
-                3. Penyesuaian Prioritas
-              </h3>
-              <p className="mb-3 text-gray-600 dark:text-gray-400">
-                Proses berpindah antar antrian berdasarkan perilakunya:
-              </p>
-              <ul className="space-y-2">
-                <li className="flex items-start">
-                  <span className="inline-block bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded mr-2 border border-blue-200 dark:border-blue-700 text-sm">
-                    1
-                  </span>
-                  <span className="text-gray-600 dark:text-gray-400">
-                    Proses baru dimulai di antrian prioritas tertinggi
-                  </span>
-                </li>
-                <li className="flex items-start">
-                  <span className="inline-block bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-1 rounded mr-2 border border-purple-200 dark:border-purple-700 text-sm">
-                    2
-                  </span>
-                  <span className="text-gray-600 dark:text-gray-400">
-                    Jika proses menggunakan seluruh kuantum waktunya, ia dipindah ke antrian prioritas lebih rendah
-                  </span>
-                </li>
-                <li className="flex items-start">
-                  <span className="inline-block bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded mr-2 border border-green-200 dark:border-green-700 text-sm">
-                    3
-                  </span>
-                  <span className="text-gray-600 dark:text-gray-400">
-                    Jika proses melepas CPU sebelum kuantum waktunya habis, ia tetap di antrian yang sama
-                  </span>
-                </li>
-              </ul>
-            </div>
+      <DocSection title="Preventing starvation" icon={<ArrowUpToLine />}>
+        <p>
+          If demotion were the only rule, a long job could sink to the bottom and
+          never run again while short jobs keep arriving. MLFQ guards against this
+          with two mechanisms:
+        </p>
+        <ul>
+          <li>
+            <strong>Priority boost</strong> — at a fixed interval, every process
+            is moved back to the highest-priority queue, giving stuck work a
+            fresh chance at the CPU.
+          </li>
+          <li>
+            <strong>Aging</strong> — a process that has waited too long in a
+            lower queue is individually promoted to a higher-priority queue,
+            keeping the scheduler fair.
+          </li>
+        </ul>
+        <Callout title="Fairness guarantee" icon={<Hourglass />}>
+          <p>
+            Together, boosting and aging ensure that no process waits
+            indefinitely, regardless of how many higher-priority jobs are
+            competing for the CPU.
+          </p>
+        </Callout>
+      </DocSection>
 
-            <div className="bg-gradient-to-r from-purple-50 to-green-50 dark:from-purple-900/20 dark:to-green-900/20 rounded-lg p-6 shadow-sm border border-purple-100 dark:border-purple-700">
-              <h3 className="flex items-center text-xl font-semibold mb-3 text-purple-700 dark:text-purple-300">
-                <FaUserClock className="mr-2" />
-                4. Aging (Penuaan)
-              </h3>
-              <p className="mb-3 text-gray-600 dark:text-gray-400">
-                Untuk mencegah starvation, algoritma mengimplementasikan aging:
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="flex items-center bg-gradient-to-r from-purple-100 to-blue-100 dark:from-purple-800/30 dark:to-blue-800/30 p-3 rounded-md shadow-sm border border-purple-200 dark:border-purple-600">
-                  <div className="h-2 w-2 rounded-full bg-purple-500 mr-2"></div>
-                  <span className="text-gray-600 dark:text-gray-400 text-sm">
-                    Proses yang menunggu terlalu lama di antrian prioritas rendah akan dipromosikan ke prioritas lebih tinggi
-                  </span>
-                </div>
-                <div className="flex items-center bg-gradient-to-r from-blue-100 to-green-100 dark:from-blue-800/30 dark:to-green-800/30 p-3 rounded-md shadow-sm border border-blue-200 dark:border-blue-600">
-                  <div className="h-2 w-2 rounded-full bg-blue-500 mr-2"></div>
-                  <span className="text-gray-600 dark:text-gray-400 text-sm">
-                    Ini memastikan tidak ada proses yang menunggu tanpa batas waktu
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </motion.div>
+      <DocSection title="Scheduler parameters" icon={<SlidersHorizontal />}>
+        <p>
+          Four parameters control the scheduler&apos;s behavior. You can tune all
+          of them in the <Link href="/">Simulator</Link>:
+        </p>
+        <DocDefList
+          items={[
+            {
+              term: "num_queues",
+              def: (
+                <>
+                  The number of distinct priority levels in the scheduler.{" "}
+                  <code>Q0</code> is the highest priority. Default{" "}
+                  <code>4</code>.
+                </>
+              ),
+            },
+            {
+              term: "time_slice",
+              def: (
+                <>
+                  The base time quantum for the highest-priority queue (
+                  <code>Q0</code>). Each lower queue receives{" "}
+                  <code>(level + 1) × time_slice</code>. Default <code>2</code>.
+                </>
+              ),
+            },
+            {
+              term: "boost_interval",
+              def: (
+                <>
+                  After this many time units, all processes are moved back to the
+                  highest-priority queue to prevent starvation. Default{" "}
+                  <code>100</code>.
+                </>
+              ),
+            },
+            {
+              term: "aging_threshold",
+              def: (
+                <>
+                  After a process has waited this many time units in a queue, it
+                  is promoted to a higher-priority queue. Default <code>5</code>.
+                </>
+              ),
+            },
+          ]}
+        />
+      </DocSection>
 
-        <motion.div variants={item} className="mb-8">
-          <div className="border-l-4 border-green-500 pl-4 mb-4">
-            <h2 className="flex items-center text-2xl font-semibold mb-4 text-green-600 dark:text-green-400">
-              <FaCode className="mr-2" />
-              Implementasi Simulasi
-            </h2>
-          </div>
-          <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-lg p-6 shadow-sm border border-green-100 dark:border-green-700">
-            <p className="mb-3 text-gray-600 dark:text-gray-400">
-              Implementasi kami meliputi:
-            </p>
+      <DocSection title="What the simulator implements" icon={<Cpu />}>
+        <p>This build of the simulator provides:</p>
+        <ul>
+          <li>Real-time visualization of processes moving between queues.</li>
+          <li>Interactive creation and management of processes.</li>
+          <li>Adjustable MLFQ parameters.</li>
+          <li>Performance-metric calculation across the whole run.</li>
+        </ul>
+      </DocSection>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center p-3 bg-gradient-to-r from-green-100 to-blue-100 dark:from-green-800/30 dark:to-blue-800/30 rounded-md shadow-sm border border-green-200 dark:border-green-600">
-                <div className="bg-green-200 dark:bg-green-700 p-2 rounded-full mr-3">
-                  <FaLayerGroup className="text-green-600 dark:text-green-300" />
-                </div>
-                <span className="text-gray-600 dark:text-gray-400 text-sm">
-                  Visualisasi real-time perpindahan proses antar antrian
-                </span>
-              </div>
-              <div className="flex items-center p-3 bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-800/30 dark:to-purple-800/30 rounded-md shadow-sm border border-blue-200 dark:border-blue-600">
-                <div className="bg-blue-200 dark:bg-blue-700 p-2 rounded-full mr-3">
-                  <FaExchangeAlt className="text-blue-600 dark:text-blue-300" />
-                </div>
-                <span className="text-gray-600 dark:text-gray-400 text-sm">
-                  Pembuatan dan pengelolaan proses interaktif
-                </span>
-              </div>
-              <div className="flex items-center p-3 bg-gradient-to-r from-purple-100 to-green-100 dark:from-purple-800/30 dark:to-green-800/30 rounded-md shadow-sm border border-purple-200 dark:border-purple-600">
-                <div className="bg-purple-200 dark:bg-purple-700 p-2 rounded-full mr-3">
-                  <FaCog className="text-purple-600 dark:text-purple-300" />
-                </div>
-                <span className="text-gray-600 dark:text-gray-400 text-sm">
-                  Parameter MLFQ yang dapat disesuaikan
-                </span>
-              </div>
-              <div className="flex items-center p-3 bg-gradient-to-r from-green-100 to-blue-100 dark:from-green-800/30 dark:to-blue-800/30 rounded-md shadow-sm border border-green-200 dark:border-green-600">
-                <div className="bg-green-200 dark:bg-green-700 p-2 rounded-full mr-3">
-                  <FaChartLine className="text-green-600 dark:text-green-300" />
-                </div>
-                <span className="text-gray-600 dark:text-gray-400 text-sm">
-                  Perhitungan metrik kinerja
-                </span>
-              </div>
-            </div>
-          </div>
-        </motion.div>
+      <DocSection title="Performance metrics" icon={<Gauge />}>
+        <p>
+          The simulation tracks several standard scheduling metrics so you can
+          compare how different configurations perform:
+        </p>
+        <DocDefList
+          items={[
+            {
+              term: "Turnaround time",
+              def: "Total time from a process's submission to its completion.",
+            },
+            {
+              term: "Waiting time",
+              def: "Time a process spends waiting in the queues.",
+            },
+            {
+              term: "Response time",
+              def: "Time from submission until the first CPU allocation.",
+            },
+            {
+              term: "CPU utilization",
+              def: "Percentage of time the CPU is kept busy.",
+            },
+          ]}
+        />
+      </DocSection>
 
-        <motion.div variants={item} className="mb-8">
-          <div className="border-l-4 border-blue-500 pl-4 mb-4">
-            <h2 className="flex items-center text-2xl font-semibold mb-4 text-blue-600 dark:text-blue-400">
-              <FaChartLine className="mr-2" />
-              Metrik Kinerja
-            </h2>
-          </div>
-          <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-green-50 dark:from-blue-900/20 dark:via-purple-900/20 dark:to-green-900/20 rounded-lg p-6 shadow-sm border border-blue-100 dark:border-blue-700">
-            <p className="mb-4 text-gray-600 dark:text-gray-400">
-              Simulasi melacak beberapa metrik penting:
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
-              <div className="flex items-center bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-800/30 dark:to-purple-800/30 p-3 rounded-md shadow-sm border border-blue-200 dark:border-blue-600">
-                <div className="h-2 w-2 rounded-full bg-blue-500 mr-2"></div>
-                <span className="text-gray-600 dark:text-gray-400 text-sm">
-                  <span className="font-medium text-blue-700 dark:text-blue-300">
-                    Turnaround Time
-                  </span>{" "}
-                  - Total waktu dari submission hingga completion
-                </span>
-              </div>
-              <div className="flex items-center bg-gradient-to-r from-purple-100 to-green-100 dark:from-purple-800/30 dark:to-green-800/30 p-3 rounded-md shadow-sm border border-purple-200 dark:border-purple-600">
-                <div className="h-2 w-2 rounded-full bg-purple-500 mr-2"></div>
-                <span className="text-gray-600 dark:text-gray-400 text-sm">
-                  <span className="font-medium text-purple-700 dark:text-purple-300">
-                    Waiting Time
-                  </span>{" "}
-                  - Waktu yang dihabiskan menunggu di antrian
-                </span>
-              </div>
-              <div className="flex items-center bg-gradient-to-r from-green-100 to-blue-100 dark:from-green-800/30 dark:to-blue-800/30 p-3 rounded-md shadow-sm border border-green-200 dark:border-green-600">
-                <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
-                <span className="text-gray-600 dark:text-gray-400 text-sm">
-                  <span className="font-medium text-green-700 dark:text-green-300">
-                    Response Time
-                  </span>{" "}
-                  - Waktu hingga alokasi CPU pertama
-                </span>
-              </div>
-              <div className="flex items-center bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-800/30 dark:to-purple-800/30 p-3 rounded-md shadow-sm border border-blue-200 dark:border-blue-600">
-                <div className="h-2 w-2 rounded-full bg-blue-500 mr-2"></div>
-                <span className="text-gray-600 dark:text-gray-400 text-sm">
-                  <span className="font-medium text-blue-700 dark:text-blue-300">
-                    Utilisasi CPU
-                  </span>{" "}
-                  - Persentase waktu CPU sibuk
-                </span>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      </motion.div>
+      <DocSection title="Next steps" icon={<Info />}>
+        <DocCardGrid>
+          <DocCard
+            href="/Documentation/how-to-use"
+            title="Using the simulator"
+            description="A step-by-step walkthrough of building and running a workload."
+            icon={<MousePointerClick />}
+          />
+          <DocCard
+            href="/"
+            title="Open the Simulator"
+            description="Load a sample workload, tune the scheduler, and run it."
+            icon={<Play />}
+          />
+        </DocCardGrid>
+      </DocSection>
     </Documentation>
   );
 }
