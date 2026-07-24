@@ -31,7 +31,7 @@ export default function Navbar() {
           </span>
           <span className="flex flex-col leading-none">
             <span className="font-mono text-sm font-semibold tracking-tight text-foreground">
-              Test
+              
             </span>
             <span className="text-[0.625rem] uppercase tracking-[0.16em] text-muted-foreground">
               Scheduler
